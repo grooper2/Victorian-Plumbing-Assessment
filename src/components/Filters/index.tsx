@@ -1,0 +1,109 @@
+import { Box, Checkbox, CheckboxGroup, Flex, Heading } from "@chakra-ui/react";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+} from "@chakra-ui/react";
+import { Facet } from "../../types";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function Filters({ facets }: { facets: Facet[] }) {
+  const [selectedFacets, setSelectedFacets] = useState<Record<string, string[]>>({});
+
+  const navigate = useNavigate();
+
+  const handleCheckboxChange = (
+    facetIdentifier: string,
+    optionIdentifier: string,
+    isChecked: boolean
+  ) => {
+    setSelectedFacets((prev) => {
+      const currentOptions = prev[facetIdentifier] || [];
+
+      // Add or remove the option based on whether it's checked or unchecked
+      const updatedOptions = isChecked
+        ? [...currentOptions, optionIdentifier]
+        : currentOptions.filter((id) => id !== optionIdentifier);
+
+      return {
+        ...prev,
+        [facetIdentifier]: updatedOptions,
+      };
+    });
+
+    // Apply search params after updating the state
+    applySearchParams(facetIdentifier, optionIdentifier, isChecked);
+  };
+
+  const applySearchParams = (
+    facetIdentifier: string,
+    optionIdentifier: string,
+    isChecked: boolean
+  ) => {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    if (isChecked) {
+      const currentValues = searchParams.get(facetIdentifier)?.split(",") || [];
+      currentValues.push(optionIdentifier);
+      searchParams.set(facetIdentifier, currentValues.join(","));
+    } else {
+      const currentValues = searchParams.get(facetIdentifier)?.split(",") || [];
+      const updatedValues = currentValues.filter((id) => id !== optionIdentifier);
+      if (updatedValues.length > 0) {
+        searchParams.set(facetIdentifier, updatedValues.join(","));
+      } else {
+        searchParams.delete(facetIdentifier);
+      }
+    }
+
+    // Update the URL with the new search parameters
+    navigate(`?${searchParams.toString()}`);
+  };
+
+  return (
+    <Accordion
+      border="1px solid"
+      borderRadius="8px"
+      defaultIndex={[0]}
+      allowMultiple
+    >
+      {facets.map((facet) => (
+        <AccordionItem key={facet.identifier} border="none">
+          <AccordionButton>
+            <Box as="span" flex="1" textAlign="left">
+              <Heading size="sm">{facet.identifier} Filter</Heading>
+            </Box>
+            <AccordionIcon />
+          </AccordionButton>
+          <AccordionPanel pb={4}>
+            <CheckboxGroup
+            >
+              <Flex direction="column" gap="8px">
+                {facet.options.map((option) => {
+                 const isChecked =
+                 selectedFacets[facet.identifier]?.includes(option.identifier) || false;
+
+                  return (
+                    <Checkbox key={option.identifier} isChecked={isChecked}
+                    onChange={(e) =>
+                      handleCheckboxChange(
+                        facet.identifier,
+                        option.identifier,
+                        e.target.checked
+                      )
+                    }>
+                      {`${option.displayValue} (${option.productCount})`}
+                    </Checkbox>
+                  );
+                })}
+              </Flex>
+            </CheckboxGroup>
+          </AccordionPanel>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+}

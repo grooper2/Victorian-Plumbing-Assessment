@@ -17,7 +17,7 @@ export default function ProductScreen() {
   const searchParams = new URLSearchParams(location.search);
   const curentPage = Number(searchParameters.get("page"));
 
-  const itemsPerPage = 20; // Adjust according to your API's page size
+  const itemsPerPage = 20; 
 
   async function fetchProdcuts(
     sort?: string,
@@ -91,7 +91,6 @@ export default function ProductScreen() {
   };
 
   const handlePageChange = (newPage: number) => {
-    console.log("new page", newPage);
     searchParams.set("page", newPage.toString());
     navigate(`${location.pathname}?${searchParams.toString()}`);
   };
@@ -115,7 +114,6 @@ export default function ProductScreen() {
     const pageButtons = [];
 
     if (totalPages <= 7) {
-      // Show all pages if total pages are less than or equal to 7
       for (let i = 1; i <= totalPages; i++) {
         pageButtons.push(
           <Button
@@ -129,7 +127,6 @@ export default function ProductScreen() {
         );
       }
     } else {
-      // Show first 2 pages, last 2 pages, and the pages around the current page
       pageButtons.push(
         <Button
           key={1}
@@ -221,7 +218,7 @@ export default function ProductScreen() {
             onClick={() =>
               curentPage && handleNextPageChange(curentPage + 1)
             }
-            isDisabled={curentPage === totalPages}
+            isDisabled={curentPage === totalPages || (!curentPage && totalPages === 1)}
           >
             Next
           </Button>

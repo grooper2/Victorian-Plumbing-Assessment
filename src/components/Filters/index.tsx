@@ -23,7 +23,6 @@ export default function Filters({ facets }: { facets: Facet[] }) {
     setSelectedFacets((prev) => {
       const currentOptions = prev[facetIdentifier] || [];
 
-      // Add or remove the option based on whether it's checked or unchecked
       const updatedOptions = isChecked
         ? [...currentOptions, optionIdentifier]
         : currentOptions.filter((id) => id !== optionIdentifier);
@@ -34,7 +33,6 @@ export default function Filters({ facets }: { facets: Facet[] }) {
       };
     });
 
-    // Apply search params after updating the state
     applySearchParams(facetIdentifier, optionIdentifier, isChecked);
   };
 
@@ -58,8 +56,6 @@ export default function Filters({ facets }: { facets: Facet[] }) {
         searchParams.delete(facetIdentifier);
       }
     }
-
-    // Update the URL with the new search parameters
     navigate(`?${searchParams.toString()}`);
   };
 

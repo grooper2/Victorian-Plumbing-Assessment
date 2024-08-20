@@ -1,5 +1,4 @@
 import {
-  Badge,
   Box,
   Checkbox,
   CheckboxGroup,
@@ -13,7 +12,7 @@ import {
   AccordionPanel,
   AccordionIcon,
 } from "@chakra-ui/react";
-import { Facet, FacetOption, FilterProps } from "../../types";
+import { FilterProps } from "../../types";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FilterBadges from "./FilterBadges";

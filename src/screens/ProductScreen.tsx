@@ -1,23 +1,24 @@
-import { Button, Flex, Heading, Skeleton, Text } from "@chakra-ui/react";
+import { Flex, Heading, Skeleton } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import PriceFilter from "../components/Filters";
 import { getProducts } from "../api/products";
 import { FacetOption, MappedFilters, ResponseData } from "../types";
 import ProductCard from "../components/ProductCard";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ProductCategories from "../components/ProductsCategories";
 import SortByDropdown from "../components/SortBy";
+import { PageButtons } from "../components/PageButtons";
+import Filters from "../components/Filters";
 
 export default function ProductScreen() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParameters] = useSearchParams();
   const [results, setResults] = useState<ResponseData | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [filters, setFilters] = useState<Record<string, FacetOption[]>>({});
   const searchParams = new URLSearchParams(location.search);
-  const curentPage = Number(searchParameters.get("page"));
+  const currentPage = Number(searchParams.get("page")) || 1;
 
-  const itemsPerPage = 20; 
+  const itemsPerPage = 20;
 
   async function fetchProdcuts(
     sort?: string,
@@ -54,9 +55,9 @@ export default function ProductScreen() {
     });
 
     const mapped: Record<string, FacetOption[]> = {};
-    const query = searchParameters.get("query");
-    const sort = searchParameters.get("sort");
-    const page = searchParameters.get("page") || "1"; // Get the current page from URL
+    const query = searchParams.get("query");
+    const sort = searchParams.get("sort");
+    const page = searchParams.get("page") || "1";
 
     if (results) {
       Object.keys(parsedFilters).forEach((facetIdentifier) => {
@@ -73,9 +74,10 @@ export default function ProductScreen() {
             })
             .filter((option) => option !== undefined);
 
-          if (selectedOptions.length > 0) {
+          if (selectedOptions.length) {
             mapped[facetIdentifier] = selectedOptions as FacetOption[];
           }
+          setFilters(mapped);
         }
       });
 
@@ -90,99 +92,17 @@ export default function ProductScreen() {
     });
   };
 
-  const handlePageChange = (newPage: number) => {
-    searchParams.set("page", newPage.toString());
-    navigate(`${location.pathname}?${searchParams.toString()}`);
-  };
-
-  const handleNextPageChange = (newPage: number) => {
-    searchParams.set("page", newPage.toString());
-    navigate(`${location.pathname}?${searchParams.toString()}`);
-  };
-
-  const handlePreviousPageChange = (newPage: number) => {
-    searchParams.set("page", newPage.toString());
-    navigate(`${location.pathname}?${searchParams.toString()}`);
-  };
-
   const totalPages = results
     ? Math.ceil(results.pagination.total / itemsPerPage)
     : 1;
-  const currentPage = Number(searchParameters.get("page") || 1);
-
-  const generatePageButtons = () => {
-    const pageButtons = [];
-
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageButtons.push(
-          <Button
-            key={i}
-            size="sm"
-            onClick={() => handlePageChange(i)}
-            variant={i === currentPage ? "solid" : "outline"}
-          >
-            {i}
-          </Button>
-        );
-      }
-    } else {
-      pageButtons.push(
-        <Button
-          key={1}
-          size="sm"
-          onClick={() => handlePageChange(1)}
-          variant={1 === currentPage ? "solid" : "outline"}
-        >
-          1
-        </Button>
-      );
-
-      if (currentPage > 4) {
-        pageButtons.push(<Text key="start-ellipsis">...</Text>);
-      }
-
-      const startPage = Math.max(2, currentPage - 1);
-      const endPage = Math.min(totalPages - 1, currentPage + 1);
-
-      for (let i = startPage; i <= endPage; i++) {
-        pageButtons.push(
-          <Button
-            key={i}
-            size="sm"
-            onClick={() => handlePageChange(i)}
-            variant={i === currentPage ? "solid" : "outline"}
-          >
-            {i}
-          </Button>
-        );
-      }
-
-      if (currentPage < totalPages - 3) {
-        pageButtons.push(<Text key="end-ellipsis">...</Text>);
-      }
-
-      pageButtons.push(
-        <Button
-          key={totalPages}
-          size="sm"
-          onClick={() => handlePageChange(totalPages)}
-          variant={totalPages === currentPage ? "solid" : "outline"}
-        >
-          {totalPages}
-        </Button>
-      );
-    }
-
-    return pageButtons;
-  };
 
   return (
     <Flex w="100%" gap="32px" px="5%" py="64px">
       <Skeleton isLoaded={!isLoading}>
         <Flex direction="column" w="250px" gap="16px">
           <Heading size="md">Filter By</Heading>
-          <PriceFilter facets={results?.facets || []} />
+          {/* Had incorect name of component */}
+          <Filters filters={filters} facets={results?.facets || []} />
         </Flex>
       </Skeleton>
       <Flex direction="column" gap="16px">
@@ -204,25 +124,7 @@ export default function ProductScreen() {
             ))}
           </Flex>
         </Skeleton>
-        <Flex justify="center" align="center" mt="4px" gap="8px">
-          <Button
-            onClick={() =>
-              curentPage && handlePreviousPageChange(curentPage - 1)
-            }
-            isDisabled={curentPage === 1 || !curentPage}
-          >
-            Previous
-          </Button>
-          {generatePageButtons()}
-          <Button
-            onClick={() =>
-              curentPage && handleNextPageChange(curentPage + 1)
-            }
-            isDisabled={curentPage === totalPages || (!curentPage && totalPages === 1)}
-          >
-            Next
-          </Button>
-        </Flex>
+        <PageButtons totalPages={totalPages} currentPage={currentPage} />
       </Flex>
     </Flex>
   );

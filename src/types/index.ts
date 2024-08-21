@@ -141,3 +141,13 @@ export interface BrandImage {
   isDefault: boolean;
   attributes: ImageAttributes;
 }
+
+export type PageButtonProps = {
+  totalPages: number
+  currentPage: number
+}
+
+export type FilterProps = {
+  facets: Facet[];
+  filters: Record<string, FacetOption[]>;
+}
